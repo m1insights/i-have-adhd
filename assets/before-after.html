@@ -5,18 +5,18 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    width: 1600px; height: 680px;
+    width: 1600px; height: 780px;
     background: #0b0e14;
     font-family: "SF Mono", ui-monospace, Menlo, monospace;
     display: flex; flex-direction: column;
-    padding: 36px 40px;
+    padding: 34px 40px 26px;
     color: #e6e9ef;
   }
   h1 {
     font-size: 26px; font-weight: 600; letter-spacing: -0.3px;
     margin-bottom: 6px; font-family: -apple-system, "SF Pro Display", sans-serif;
   }
-  .sub { color: rgba(230,233,239,.5); font-size: 15px; margin-bottom: 24px;
+  .sub { color: rgba(230,233,239,.5); font-size: 15px; margin-bottom: 22px;
     font-family: -apple-system, sans-serif; }
   .panes { display: flex; gap: 24px; flex: 1; min-height: 0; }
   .pane {
@@ -24,60 +24,73 @@
     border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;
   }
   .bar {
-    padding: 10px 16px; font-size: 13px; letter-spacing: .4px;
+    padding: 10px 16px; font-size: 13px; letter-spacing: .3px;
     border-bottom: 1px solid rgba(255,255,255,.07);
     display: flex; align-items: center; gap: 8px;
     font-family: -apple-system, sans-serif; font-weight: 600;
   }
   .bar .dots { display: flex; gap: 6px; margin-right: 8px; }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.14); }
+  .bar .wc { margin-left: auto; font-weight: 500; color: rgba(230,233,239,.4); }
   .before .bar { color: rgba(230,233,239,.45); }
   .after .bar { color: #4cc7e6; }
-  .body { padding: 16px 20px; font-size: 13.5px; line-height: 1.62; overflow: hidden; }
-  .prompt { color: rgba(230,233,239,.92); margin-bottom: 12px; }
+  .body { padding: 15px 20px; overflow: hidden; flex: 1; }
+  .prompt { color: rgba(230,233,239,.92); margin-bottom: 11px; font-size: 13px; }
   .prompt .caret { color: #4cc7e6; }
-  .before .reply { color: rgba(230,233,239,.42); font-size: 12.5px; line-height: 1.55; }
-  .before .reply p { margin-bottom: 8px; }
-  .after .reply { color: rgba(230,233,239,.88); }
-  .after .reply p { margin-bottom: 9px; }
-  .after .hl { color: #4cc7e6; }
-  code.k { background: rgba(76,199,230,.10); border-radius: 4px; padding: 1px 5px; }
+  .reply { white-space: pre-wrap; word-wrap: break-word; }
+  .before .reply { color: rgba(230,233,239,.42); font-size: 11.5px; line-height: 1.5; }
+  .after .reply { color: rgba(230,233,239,.88); font-size: 13px; line-height: 1.62; }
   .fade { position: relative; }
   .fade::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 110px;
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 120px;
     background: linear-gradient(transparent, #10141d);
   }
+  .cap { margin-top: 14px; font-size: 12.5px; color: rgba(230,233,239,.38);
+    font-family: -apple-system, sans-serif; }
 </style>
 </head>
 <body>
-  <h1>Same question. Same model. One skill.</h1>
-  <div class="sub">github.com/m1insights/i-have-adhd — an always-on output contract for Claude Code</div>
+  <h1>Same prompt. Same model. Two real runs.</h1>
+  <div class="sub">verbatim output from two headless <b>claude -p</b> runs — the only difference is the i-have-adhd contract &nbsp;·&nbsp; github.com/m1insights/i-have-adhd</div>
   <div class="panes">
     <div class="pane before">
-      <div class="bar"><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>without i-have-adhd</div>
+      <div class="bar"><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>without i-have-adhd<span class="wc">473 words</span></div>
       <div class="body fade">
-        <div class="prompt"><span class="caret">&gt;</span> why is login failing after the deploy?</div>
-        <div class="reply">
-          <p>Great question! Let me investigate the authentication flow to understand what might be happening after your deployment. Looking at your codebase, there are several moving pieces involved in the login path that we should examine systematically.</p>
-          <p>First, it's worth understanding the overall architecture: your middleware performs JWT verification on every inbound request via the <b>verifyToken</b> function, which validates the token's signature against the currently configured signing key, checks the expiration claim, and additionally compares the issued-at (iat) claim against the key rotation epoch stored in your environment configuration.</p>
-          <p>During the deployment, it appears the JWT_SIGNING_KEY environment variable was rotated as part of your secret management policy. Consequently, any tokens issued prior to the rotation will fail signature verification, since they were signed with the previous key material. This would manifest as 401 responses for previously authenticated users, while newly issued tokens would...</p>
-          <p>There are a few possible approaches we could consider here. Option one would be implementing a dual-key verification window, which is generally considered best practice for zero-downtime rotations. Option two...</p>
-        </div>
+        <div class="prompt"><span class="caret">&gt;</span> my node app returns 401s for users who logged in before yesterdays deploy. new logins work fine. whats happening and how do i fix it?</div>
+        <div class="reply">Classic deploy symptom: the deploy invalidated the credential material that old sessions depend on, so anything issued before the deploy no longer verifies, while anything issued after was created with the new material. There are two usual culprits, depending on how your auth works:
+
+**1. JWT/token auth: the signing secret changed.** If you verify tokens with something like `jwt.verify(token, process.env.JWT_SECRET)`, old tokens were signed with the old secret and now fail with `invalid signature` → your middleware returns 401. Common ways this happens:
+
+- The secret is generated at boot, e.g. `const SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex')`. If the env var was never set in prod (or dotenv isn't loaded there), every restart mints a new secret and kills all existing tokens. This is the single most common cause of exactly your symptom.
+- Someone rotated `JWT_SECRET` in the deploy's env config, or the deploy moved to a new environment/host with a different value.
+- You switched signing keys/algorithms without accepting the old key during a grace period.
+
+**2. Session-cookie auth: the session store was wiped.** If you use `express-session` with the default `MemoryStore` (or sessions in a local SQLite/Redis that got recreated), the deploy's process restart erased all sessions. Old cookies reference session IDs that no longer exist → 401. New logins create fresh sessions, so they work.
+
+**How to tell which:** look at the actual error your auth middleware logs for a failing request. `JsonWebTokenError: invalid signature` means case 1; a cookie that comes in but matches no session means case 2. You can also take a failing user's token, decode it (jwt.io or `jwt.decode`), and try verifying it against your current secret.
+
+**Fixes:**
+
+- Case 1: set `JWT_SECRET` as a stable, explicit env var in your deploy config and remove any random-fallback logic — make the app crash at startup if it's missing rather than silently generating one. If the rotation was intentional, either verify against both old and new secrets for a transition window (try new, fall back to old) or accept that everyone re-logs-in once.
+- Case 2: move sessions to a persistent external store (`connect-redis`, `connect-pg-simple`, etc.) so restarts and deploys don't drop them.</div>
       </div>
     </div>
     <div class="pane after">
-      <div class="bar"><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>with i-have-adhd</div>
+      <div class="bar"><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>with i-have-adhd<span class="wc">147 words</span></div>
       <div class="body">
-        <div class="prompt"><span class="caret">&gt;</span> why is login failing after the deploy?</div>
-        <div class="reply">
-          <p>The deploy rotated the signing key, so every login issued before it stopped working — the old passes can't be verified anymore. New logins are fine.</p>
-          <p>Fix (~10 min): accept both keys for 24h so old sessions survive.</p>
-          <p><span class="hl">1.</span> <code class="k">src/auth.ts:42</code> — opened it for you; swap in the dual-key check below</p>
-          <p><span class="hl">2.</span> Run <code class="k">npm test -- auth.spec.ts</code></p>
-          <p><span class="hl">Next:</span> deploy, then try one pre-deploy account.</p>
-        </div>
+        <div class="prompt"><span class="caret">&gt;</span> my node app returns 401s for users who logged in before yesterdays deploy. new logins work fine. whats happening and how do i fix it?</div>
+        <div class="reply">Your deploy changed (or regenerated) the secret that checks login tokens. Old tokens were signed with the old secret, so they now fail verification → 401. New logins get tokens signed with the new secret, so they pass.
+
+Most common cause: `JWT_SECRET` (or session secret) isn't pinned — it's regenerated at boot or was rotated in env. Runner-up: sessions stored in memory, wiped by the restart.
+
+1. Log the error in your auth middleware — `jwt.verify` saying "invalid signature" confirms the secret changed ("jwt expired" would mean something else).
+2. `grep -rn "JWT_SECRET" src/` — a fallback like `|| crypto.randomBytes(...)` or a changed default is the smoking gun.
+3. Fix: set one fixed secret in your deploy env so it survives restarts. Affected users just log in again — nothing is corrupted.
+
+~10 min. Next: paste the path to the repo and I'll find the exact line.</div>
       </div>
     </div>
   </div>
+  <div class="cap">Left pane truncated by the viewport — it keeps going. Right pane is the whole reply.</div>
 </body>
 </html>
