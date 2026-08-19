@@ -30,11 +30,20 @@ Both hooks are one script: [`hooks/adhd.sh`](hooks/adhd.sh). No dependencies bey
 
 ## Install
 
-~2 minutes.
+One command, ~30 seconds:
 
 ```bash
-git clone https://github.com/OWNER/i-have-adhd.git
-cd i-have-adhd
+git clone https://github.com/m1insights/i-have-adhd.git && cd i-have-adhd && ./install.sh
+```
+
+The installer copies the skill and hook into `~/.claude/`, wires both hooks into `~/.claude/settings.json` without touching anything else in it, and backs the file up first (`settings.json.bak.i-have-adhd`). Safe to re-run. Needs bash + python3.
+
+Uninstall: delete `~/.claude/skills/i-have-adhd/`, `~/.claude/hooks/adhd.sh`, and the two `adhd.sh` hook entries in `settings.json` (or restore the backup).
+
+<details>
+<summary>Manual install (if you'd rather not run a script)</summary>
+
+```bash
 mkdir -p ~/.claude/skills/i-have-adhd ~/.claude/hooks
 cp skill/SKILL.md ~/.claude/skills/i-have-adhd/SKILL.md
 cp hooks/adhd.sh  ~/.claude/hooks/adhd.sh
@@ -65,6 +74,8 @@ Then wire the hooks into `~/.claude/settings.json`:
 }
 ```
 
+</details>
+
 New sessions pick it up immediately. Verify: ask Claude anything — the reply should lead with a plain-English answer and fit on one screen.
 
 Optional: if you use custom slash commands that orchestrate long tasks, append [`examples/task-command-footer.md`](examples/task-command-footer.md) to them so subagent-driven runs report in the same register — and never pause between approved phases.
@@ -81,6 +92,7 @@ Optional: if you use custom slash commands that orchestrate long tasks, append [
 |---|---|
 | `skill/SKILL.md` | The skill — full contract with rationale and examples |
 | `hooks/adhd.sh` | Both hooks in one script (`session-start` / `prompt` modes) |
+| `install.sh` | One-command installer — copies files, wires hooks, backs up settings |
 | `examples/task-command-footer.md` | Drop-in footer for custom orchestrator slash commands |
 
 ## License
