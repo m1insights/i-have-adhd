@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1600px; height: 680px;
+    background: #0b0e14;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    display: flex; flex-direction: column;
+    padding: 36px 40px;
+    color: #e6e9ef;
+  }
+  h1 {
+    font-size: 26px; font-weight: 600; letter-spacing: -0.3px;
+    margin-bottom: 6px; font-family: -apple-system, "SF Pro Display", sans-serif;
+  }
+  .sub { color: rgba(230,233,239,.5); font-size: 15px; margin-bottom: 24px;
+    font-family: -apple-system, sans-serif; }
+  .panes { display: flex; gap: 24px; flex: 1; min-height: 0; }
+  .pane {
+    flex: 1; background: #10141d; border: 1px solid rgba(255,255,255,.09);
+    border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .bar {
+    padding: 10px 16px; font-size: 13px; letter-spacing: .4px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    display: flex; align-items: center; gap: 8px;
+    font-family: -apple-system, sans-serif; font-weight: 600;
+  }
+  .bar .dots { display: flex; gap: 6px; margin-right: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.14); }
+  .before .bar { color: rgba(230,233,239,.45); }
+  .after .bar { color: #4cc7e6; }
+  .body { padding: 16px 20px; font-size: 13.5px; line-height: 1.62; overflow: hidden; }
+  .prompt { color: rgba(230,233,239,.92); margin-bottom: 12px; }
+  .prompt .caret { color: #4cc7e6; }
+  .before .reply { color: rgba(230,233,239,.42); font-size: 12.5px; line-height: 1.55; }
+  .before .reply p { margin-bottom: 8px; }
+  .after .reply { color: rgba(230,233,239,.88); }
+  .after .reply p { margin-bottom: 9px; }
+  .after .hl { color: #4cc7e6; }
+  code.k { background: rgba(76,199,230,.10); border-radius: 4px; padding: 1px 5px; }
+  .fade { position: relative; }
+  .fade::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 110px;
+    background: linear-gradient(transparent, #10141d);
+  }
+</style>
+</head>
+<body>
+  <h1>Same question. Same model. One skill.</h1>
+  <div class="sub">github.com/m1insights/i-have-adhd — an always-on output contract for Claude Code</div>
+  <div class="panes">
+    <div class="pane before">
+      <div class="bar"><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>without i-have-adhd</div>
+      <div class="body fade">
+        <div class="prompt"><span class="caret">&gt;</span> why is login failing after the deploy?</div>
+        <div class="reply">
+          <p>Great question! Let me investigate the authentication flow to understand what might be happening after your deployment. Looking at your codebase, there are several moving pieces involved in the login path that we should examine systematically.</p>
+          <p>First, it's worth understanding the overall architecture: your middleware performs JWT verification on every inbound request via the <b>verifyToken</b> function, which validates the token's signature against the currently configured signing key, checks the expiration claim, and additionally compares the issued-at (iat) claim against the key rotation epoch stored in your environment configuration.</p>
+          <p>During the deployment, it appears the JWT_SIGNING_KEY environment variable was rotated as part of your secret management policy. Consequently, any tokens issued prior to the rotation will fail signature verification, since they were signed with the previous key material. This would manifest as 401 responses for previously authenticated users, while newly issued tokens would...</p>
+          <p>There are a few possible approaches we could consider here. Option one would be implementing a dual-key verification window, which is generally considered best practice for zero-downtime rotations. Option two...</p>
+        </div>
+      </div>
+    </div>
+    <div class="pane after">
+      <div class="bar"><span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>with i-have-adhd</div>
+      <div class="body">
+        <div class="prompt"><span class="caret">&gt;</span> why is login failing after the deploy?</div>
+        <div class="reply">
+          <p>The deploy rotated the signing key, so every login issued before it stopped working — the old passes can't be verified anymore. New logins are fine.</p>
+          <p>Fix (~10 min): accept both keys for 24h so old sessions survive.</p>
+          <p><span class="hl">1.</span> <code class="k">src/auth.ts:42</code> — opened it for you; swap in the dual-key check below</p>
+          <p><span class="hl">2.</span> Run <code class="k">npm test -- auth.spec.ts</code></p>
+          <p><span class="hl">Next:</span> deploy, then try one pre-deploy account.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
