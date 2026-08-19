@@ -2,7 +2,7 @@
 
 An always-on output contract for [Claude Code](https://claude.com/claude-code), written for ADHD brains.
 
-I have ADHD and usually run 5–10 Claude Code sessions in parallel. Each reply gets about five seconds of attention and zero memory of earlier turns. A 40-line technical explanation doesn't get read — it gets skipped, and the session stalls. This skill makes every reply digestible in one glance, and makes the agent finish approved work instead of pausing to ask permission.
+I have ADHD and usually run 5–10 Claude Code sessions in parallel. Each reply gets a few seconds of my attention — I don't have a couple of minutes to read every response across 5–10 sessions in an 8+ hour workday. A 40-line technical explanation doesn't get read — it gets skipped, and the session stalls. This skill makes every reply digestible in one glance, and makes the agent finish approved work instead of pausing to ask permission.
 
 It's been my daily driver across a dozen production projects (iOS, Go, Python, Next.js).
 
